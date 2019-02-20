@@ -195,9 +195,9 @@ var $ = function (_selector) {
         },
         on: function(ev, callback) {
             for (let element of Object.values(this)) {
-                let elCallback = function() {
+                let elCallback = function(ev) {
                     let newQuery = new constr([element]);
-                    callback.call(newQuery);
+                    callback.call(newQuery, ev);
                 };
 
                 if (!element.hasOwnProperty('eventListeners'))
