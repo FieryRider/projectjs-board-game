@@ -18,6 +18,8 @@ let gameBoard = [
         [2, 2, 2, 2, 2, 2, 2, 2, 2]
 ]
 
+let selectedUnit = new Unit(Dwarf, {'x': 1, 'y': 1}, 'blue');
+
 canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
     'border': '1px solid black',
     'display': 'block',
@@ -63,8 +65,36 @@ function drawBoard() {
     });
 }
 
+function drawOverlay() {
+    if (!selectedUnit) return;
+
+    overlayBackgroundColor = '#ffffff';
+    textColor = "#000000";
+    ctx.font = '22px "Comic Sans MS"';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+
+    for (let y = 0; y < gameBoard.length; y++) {
+        for (let x = 0; x < gameBoard[y].length; x++) {
+            let distance = Math.abs(selectedUnit.position['x'] - x) + Math.abs(selectedUnit.position['y'] - y);
+            let reachable = (distance <= selectedUnit.characterClass.movementSpeed) && (distance != 0);
+
+            if (reachable) {
+                ctx.fillStyle = overlayBackgroundColor;
+                ctx.fillRect((x * boxWidth), (y * boxHeight), boxWidth, boxHeight);
+
+                ctx.translate((x * boxWidth), (y * boxHeight));
+                ctx.fillStyle = textColor;
+                ctx.fillText(distance.toString(), (boxWidth / 2), (boxHeight / 2));
+                ctx.translate(-(x * boxWidth), -(y * boxHeight));
+            }
+        }
+    }
+}
+
 function redraw() {
     drawBoard();
+    drawOverlay();
 };
 
 redraw();
