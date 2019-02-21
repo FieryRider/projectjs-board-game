@@ -18,7 +18,31 @@ let gameBoard = [
         [2, 2, 2, 2, 2, 2, 2, 2, 2]
 ]
 
-let selectedUnit = new Unit(Dwarf, {'x': 1, 'y': 1}, 'blue');
+let playerAUnits = [
+    new Unit(Knight, {'x': 0, 'y': 1}, 'playerA'),
+    new Unit(Elf, {'x': 4, 'y': 0}, 'playerA'),
+    new Unit(Knight, {'x': 1, 'y': 1}, 'playerA'),
+    new Unit(Dwarf, {'x': 8, 'y': 1}, 'playerA'),
+    new Unit(Dwarf, {'x': 7, 'y': 0}, 'playerA'),
+    new Unit(Elf, {'x': 3, 'y': 1}, 'playerA'),
+    new Unit(Knight, {'x': 5, 'y': 0}, 'playerA'),
+    new Unit(Dwarf, {'x': 6, 'y': 1}, 'playerA'),
+    new Unit(Elf, {'x': 2, 'y': 1}, 'playerA'),
+]
+
+let playerBUnits = [
+    new Unit(Knight, {'x': 0, 'y': 5}, 'playerB'),
+    new Unit(Elf, {'x': 1, 'y': 6}, 'playerB'),
+    new Unit(Knight, {'x': 2, 'y': 6}, 'playerB'),
+    new Unit(Dwarf, {'x': 8, 'y': 5}, 'playerB'),
+    new Unit(Dwarf, {'x': 7, 'y': 6}, 'playerB'),
+    new Unit(Elf, {'x': 3, 'y': 6}, 'playerB'),
+    new Unit(Knight, {'x': 4, 'y': 5}, 'playerB'),
+    new Unit(Dwarf, {'x': 6, 'y': 5}, 'playerB'),
+    new Unit(Elf, {'x': 5, 'y': 6}, 'playerB'),
+]
+
+let selectedUnit;
 
 canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
     'border': '1px solid black',
@@ -62,6 +86,56 @@ function drawBoard() {
 
             ctx.fillRect((xIdx * boxWidth), (yIdx * boxHeight), boxWidth, boxHeight);
         });
+    });
+}
+
+function drawUnits() {
+    playerAUnits.forEach((unit) => {
+        let color;
+        switch (unit.characterClass) {
+            case Knight:
+                color = '#ff0000';
+                break;
+            case Dwarf:
+                color = '#00ff00';
+                break;
+            case Elf:
+                color = '#ffc0cb';
+                break;
+        }
+
+        centerPoint = {
+            'x': ((unit.position['x'] * boxWidth) + (boxWidth / 2)),
+            'y': ((unit.position['y'] * boxHeight) + (boxHeight / 2))
+        }
+        ctx.beginPath()
+        ctx.ellipse(centerPoint['x'], centerPoint['y'], (boxWidth / 4), (boxHeight / 4), 0, 0, Math.PI*4);
+        ctx.fillStyle = color;
+        ctx.fill();
+    });
+
+    playerBUnits.forEach((unit) => {
+        let color;
+        switch (unit.characterClass) {
+            case Knight:
+                color = '#ff0000';
+                break;
+            case Dwarf:
+                color = '#00ff00';
+                break;
+            case Elf:
+                color = '#ffc0cb';
+                break;
+        }
+
+        centerPoint = {
+            'x': ((unit.position['x'] * boxWidth) + (boxWidth / 2)),
+            'y': ((unit.position['y'] * boxHeight) + (boxHeight / 2))
+        }
+        ctx.beginPath()
+        ctx.ellipse(centerPoint['x'], centerPoint['y'], (boxWidth / 4), (boxHeight / 4), 0, 0, Math.PI*4);
+        ctx.fillStyle = color;
+        ctx.fill();
     });
 }
 
