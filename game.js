@@ -92,6 +92,12 @@ canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
                 redraw();
                 break;
             case modes.attack:
+                let reachableEnemies = getReachableEnemies();
+                reachableEnemies.some((enemy) => {
+                    if ((enemy.position['x'] == clickedBlock['x']) && (enemy.position['y'] == clickedBlock['y'])) {
+                        selectedUnit.attack(enemy);
+                    }
+                })
                 break;
         }
     });

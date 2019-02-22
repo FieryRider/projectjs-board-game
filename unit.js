@@ -9,7 +9,6 @@ var Unit = function(characterClass, position, team) {
 
 Unit.prototype = {
     move: function(destination) {
-        // If in reach
         this.position = destination;
     },
     attack: function(target) {
@@ -17,7 +16,7 @@ Unit.prototype = {
     },
     takeDamage: function(attackPoints) {
         let damage = attackPoints - this.characterClass.armor;
-        this.health -= damagedamage;
+        this.health -= damage;
 
         if (this.health <= 0)
             die();
