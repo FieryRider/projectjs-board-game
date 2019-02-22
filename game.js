@@ -43,16 +43,94 @@ let playerBUnits = [
 ]
 
 let selectedUnit;
+let modes = {
+    'select': 0,
+    'move': 1,
+    'attack': 2,
+}
+let mode = modes.select;
 
+let onMove = 'playerA';
+
+$('#wrapper').css('text-align', 'center');
 canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
     'border': '1px solid black',
-    'display': 'block',
-    'padding-left': '0',
-    'padding-right': '0',
-    'margin-left': 'auto',
-    'margin-right': 'auto'}).on('click', function(ev) {
-        console.log(`X: ${ev.offsetX} Y: ${ev.offsetY}`);
+    'display': 'inline-block'}).on('click', function(ev) {
+        let clickedBlock = {
+            'x': Math.trunc(ev.offsetX / boxWidth),
+            'y': Math.trunc(ev.offsetY / boxHeight)
+        }
+        switch (mode) {
+            case modes.select:
+                if (onMove == 'playerA') {
+                    playerAUnits.some((unit) => {
+                        if ((unit.position['x'] == clickedBlock['x']) && (unit.position['y'] == clickedBlock['y'])) {
+                            selectedUnit = unit;
+                            return;
+                        }
+                    })
+                } else {
+                    playerBUnits.some((unit) => {
+                        if ((unit.position['x'] == clickedBlock['x']) && (unit.position['y'] == clickedBlock['y'])) {
+                            selectedUnit = unit;
+                            return;
+                        }
+                    })
+                }
+
+                redraw();
+                break;
+            case modes.move:
+                let reachableBoxes = getReachableMovementBoxes();
+                reachableBoxes.some((box) => {
+                    if ((box['x'] == clickedBlock['x']) && (box['y'] == clickedBlock['y'])) {
+                        selectedUnit.move(clickedBlock);
+                        return;
+                    }
+                });
+
+                redraw();
+                break;
+            case modes.attack:
+                break;
+        }
     });
+
+$('#wrapper').add('div').id('buttons').css({
+    'display': 'inline-block',
+    'vertical-align': 'top',
+});
+$('#buttons').add('div').add('button').attr('type', 'button').id('attackButton').css({
+    'display': 'inline-block',
+    'padding': '5px',
+    'margin': '20px'
+}).text('Attack').on('click', function(ev) {
+    mode = modes.attack;
+    redraw();
+});
+$('#buttons').add('div').add('button').attr('type', 'button').id('moveButton').css({
+    'display': 'inline-block',
+    'padding': '5px',
+    'margin': '20px'
+}).text('Move').on('click', function(ev) {
+    mode = modes.move;
+    redraw();
+});
+$('#buttons').add('div').add('button').attr('type', 'button').id('healButton').css({
+    'display': 'inline-block',
+    'padding': '5px',
+    'margin': '20px'
+}).text('Heal').on('click', function(ev) {
+    selectedUnit.heal();
+    mode = modes.select;
+});
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        mode = modes.select;
+        redraw();
+    }
+})
 
 let ctx = canvas[0].getContext('2d');
 
@@ -143,32 +221,141 @@ function drawOverlay() {
     if (!selectedUnit) return;
 
     overlayBackgroundColor = '#ffffff';
+    pathBackgroundColor = '#dddddd';
     textColor = "#000000";
     ctx.font = '22px "Comic Sans MS"';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
 
-    for (let y = 0; y < gameBoard.length; y++) {
-        for (let x = 0; x < gameBoard[y].length; x++) {
-            let distance = Math.abs(selectedUnit.position['x'] - x) + Math.abs(selectedUnit.position['y'] - y);
-            let reachable = (distance <= selectedUnit.characterClass.movementSpeed) && (distance != 0);
-
-            if (reachable) {
+    switch (mode) {
+        case modes.select:
+            break;
+        case modes.move:
+            let reachableBoxes = getReachableMovementBoxes()
+            reachableBoxes.forEach((box) => {
                 ctx.fillStyle = overlayBackgroundColor;
-                ctx.fillRect((x * boxWidth), (y * boxHeight), boxWidth, boxHeight);
+                ctx.fillRect((box['x'] * boxWidth), (box['y'] * boxHeight), boxWidth, boxHeight);
 
-                ctx.translate((x * boxWidth), (y * boxHeight));
+                ctx.translate((box['x'] * boxWidth), (box['y'] * boxHeight));
                 ctx.fillStyle = textColor;
-                ctx.fillText(distance.toString(), (boxWidth / 2), (boxHeight / 2));
-                ctx.translate(-(x * boxWidth), -(y * boxHeight));
-            }
-        }
+                ctx.fillText(box['distance'].toString(), (boxWidth / 2), (boxHeight / 2));
+                ctx.translate(-(box['x'] * boxWidth), -(box['y'] * boxHeight));
+            });
+            break;
+        case modes.attack:
+            let reachableEnemies = getReachableEnemies();
+            reachableEnemies.forEach((enemy) => {
+                if (enemy.position['x'] == selectedUnit.position['x']) {
+                    let x = enemy.position['x'];
+                    gameBoard.forEach((row, y) => {
+                        let rowBetweenPlayerEnemy = (Math.min(selectedUnit.position['y'], enemy.position['y']) < y) && (y < Math.max(selectedUnit.position['y'], enemy.position['y']));
+
+                        if (rowBetweenPlayerEnemy) {
+                            let mmi = Math.min(selectedUnit.position['y'], enemy.position['y']);
+                            let mma = Math.max(selectedUnit.position['y'], enemy.position['y']);
+                            ctx.fillStyle = overlayBackgroundColor;
+                            ctx.fillRect((x * boxWidth), (y * boxHeight), boxWidth, boxHeight);
+                        }
+                    })
+                } else if (enemy.position['y'] == selectedUnit.position['y']) {
+                    let y = enemy.position['y'];
+                    gameBoard[y].forEach((column, x) => {
+                        let columnBetweenPlayerEnemy = (Math.min(selectedUnit.position['x'], enemy.position['x']) < x) && (x < Math.max(selectedUnit.position['x'], enemy.position['x']));
+
+                        if (columnBetweenPlayerEnemy) {
+                            console.log('call');
+                            ctx.fillStyle = overlayBackgroundColor;
+                            ctx.fillRect((x * boxWidth), (y * boxHeight), boxWidth, boxHeight);
+                        }
+                    })
+                }
+            });
+            break;
     }
 }
 
 function redraw() {
     drawBoard();
+    drawUnits();
     drawOverlay();
 };
+
+function getReachableMovementBoxes() {
+    let reachableBoxes = [];
+    for (let y = 0; y < gameBoard.length; y++) {
+        for (let x = 0; x < gameBoard[y].length; x++) {
+            let distance = Math.abs(selectedUnit.position['x'] - x) + Math.abs(selectedUnit.position['y'] - y);
+            let reachable = (distance <= selectedUnit.characterClass.movementSpeed) && (distance != 0);
+
+            let noUnits = true;
+            playerAUnits.some((unit) => {
+                if ((unit.position['x'] == x) && (unit.position['y'] == y)) {
+                    noUnits = false;
+                    return;
+                }
+            });
+            playerBUnits.some((unit) => {
+                if ((unit.position['x'] == x) && (unit.position['y'] == y)) {
+                    noUnits = false;
+                    return;
+                }
+            })
+
+            if (reachable && noUnits) {
+                reachableBoxes.push({
+                    'x': x,
+                    'y': y,
+                    'distance': distance
+                })
+            }
+        }
+    }
+
+    return reachableBoxes;
+}
+
+function getReachableEnemies() {
+    let reachableEnemies = [];
+    let reachableAttackBoxes = [];
+    for (let y = 0; y < gameBoard.length; y++) {
+        for (let x = 0; x < gameBoard[y].length; x++) {
+            if ((x != selectedUnit.position['x']) && (y != selectedUnit.position['y']))
+                continue;
+
+            let distance = 0;
+            if (x == selectedUnit.position['x']) {
+                distance = Math.abs(selectedUnit.position['y'] - y);
+            } else if (y == selectedUnit.position['y']) {
+                distance = Math.abs(selectedUnit.position['x'] - x);
+            }
+            let reachable = (distance <= selectedUnit.characterClass.reach) && (distance != 0);
+
+            if (reachable) {
+                reachableAttackBoxes.push({
+                    'x': x,
+                    'y': y
+                })
+            }
+        }
+    }
+
+    reachableAttackBoxes.forEach((box) => {
+        if (onMove == 'playerA') {
+            playerBUnits.forEach((unit) => {
+                if ((box['x'] == unit.position['x']) && (box['y'] == unit.position['y'])) {
+                    reachableEnemies.push(unit);
+                }
+            });
+        } else if (onMove == 'playerB') {
+            playerAUnits.forEach((unit) => {
+                if ((box['x'] == unit.position['x']) && (box['y'] == unit.position['y'])) {
+                    reachableEnemies.push(unit);
+                }
+            });
+        }
+    });
+    
+    return reachableEnemies;
+}
 
 redraw();

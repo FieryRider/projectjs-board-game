@@ -10,7 +10,7 @@ var Unit = function(characterClass, position, team) {
 Unit.prototype = {
     move: function(destination) {
         // If in reach
-        position = destination;
+        this.position = destination;
     },
     attack: function(target) {
         target.takeDamage(this.characterClass.strength);
