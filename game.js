@@ -122,17 +122,23 @@ canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
                 redraw();
                 break;
             case modes.move:
+                if (!selectedUnit) break;
                 let reachableBoxes = getReachableMovementBoxes();
                 reachableBoxes.some((box) => {
                     if ((box['x'] == clickedBlock['x']) && (box['y'] == clickedBlock['y'])) {
+
                         selectedUnit.move(clickedBlock);
-                        return;
+                        (onMove == 'playerA') ? (onMove = 'playerB') : (onMove = 'playerA');
+                        selectedUnit = null;
+                        mode = modes.select;
+                        return true;
                     }
                 });
 
                 redraw();
                 break;
             case modes.attack:
+                if (!selectedUnit) break;
                 let reachableEnemies = getReachableEnemies();
                 reachableEnemies.some((enemy) => {
                     if ((enemy.position['x'] == clickedBlock['x']) && (enemy.position['y'] == clickedBlock['y'])) {
@@ -170,7 +176,7 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('healButton').c
     'padding': '5px',
     'margin': '20px'
 }).text('Heal').on('click', function(ev) {
-    if (mode != modes.add)
+    if ((mode != modes.add) && selectedUnit)
         selectedUnit.heal();
     mode = modes.select;
 });
