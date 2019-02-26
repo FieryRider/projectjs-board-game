@@ -17,9 +17,6 @@ Unit.prototype = {
     takeDamage: function(attackPoints) {
         let damage = attackPoints - this.characterClass.armor;
         this.health -= damage;
-
-        if (this.health <= 0)
-            die();
     },
     // Adds random number between 1 and 6 to the health of the unit and remove 1 potion from it's inventory
     heal: function() {
@@ -32,7 +29,4 @@ Unit.prototype = {
             this.health = this.characterClass.health
         this.potions -= 1;
     },
-    die: function() {
-        this.dispatchEvent(die);
-    }
 }

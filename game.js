@@ -143,8 +143,29 @@ canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
                 reachableEnemies.some((enemy) => {
                     if ((enemy.position['x'] == clickedBlock['x']) && (enemy.position['y'] == clickedBlock['y'])) {
                         selectedUnit.attack(enemy);
+
+                        // Check if enemy health is 0 or below and remove the enemy if it is
+                        if (enemy.health <= 0) {
+                            if (onMove == 'playerA'){
+                                playerBUnits.some((unit, idx) => {
+                                    if (unit === enemy) {
+                                        playerBUnits.splite(idx, 1);
+                                        return true;
+                                    }
+                                });
+                            } else {
+                                playerAUnits.some((unit, idx) => {
+                                    if (unit === enemy) {
+                                        playerAUnits.splite(idx, 1);
+                                        return true;
+                                    }
+                                });
+                            }
+                        }
                     }
-                })
+                });
+                
+                redraw();
                 break;
         }
     });
