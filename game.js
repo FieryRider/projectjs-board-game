@@ -107,14 +107,14 @@ canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
                     playerAUnits.some((unit) => {
                         if ((unit.position['x'] == clickedBlock['x']) && (unit.position['y'] == clickedBlock['y'])) {
                             selectedUnit = unit;
-                            return;
+                            return true;
                         }
                     })
                 } else {
                     playerBUnits.some((unit) => {
                         if ((unit.position['x'] == clickedBlock['x']) && (unit.position['y'] == clickedBlock['y'])) {
                             selectedUnit = unit;
-                            return;
+                            return true;
                         }
                     })
                 }
@@ -408,13 +408,13 @@ function getReachableMovementBoxes() {
             playerAUnits.some((unit) => {
                 if ((unit.position['x'] == x) && (unit.position['y'] == y)) {
                     noUnits = false;
-                    return;
+                    return true;
                 }
             });
             playerBUnits.some((unit) => {
                 if ((unit.position['x'] == x) && (unit.position['y'] == y)) {
                     noUnits = false;
-                    return;
+                    return true;
                 }
             })
 
