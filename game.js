@@ -17,38 +17,31 @@ let gameBoard = [
         [2, 2, 2, 2, 2, 2, 2, 2, 2],
         [2, 2, 2, 2, 2, 2, 2, 2, 2]
 ]
+let playerAInventory = {
+    'knight': 3,
+    'elf': 3,
+    'dwarf': 3
+}
+let playerBInventory = {
+    'knight': 3,
+    'elf': 3,
+    'dwarf': 3
+}
 
-let playerAUnits = [
-    new Unit(Knight, {'x': 0, 'y': 1}, 'playerA'),
-    new Unit(Elf, {'x': 4, 'y': 0}, 'playerA'),
-    new Unit(Knight, {'x': 1, 'y': 1}, 'playerA'),
-    new Unit(Dwarf, {'x': 8, 'y': 1}, 'playerA'),
-    new Unit(Dwarf, {'x': 7, 'y': 0}, 'playerA'),
-    new Unit(Elf, {'x': 3, 'y': 1}, 'playerA'),
-    new Unit(Knight, {'x': 5, 'y': 0}, 'playerA'),
-    new Unit(Dwarf, {'x': 6, 'y': 1}, 'playerA'),
-    new Unit(Elf, {'x': 2, 'y': 1}, 'playerA'),
-]
+let unitToAdd;
 
-let playerBUnits = [
-    new Unit(Knight, {'x': 0, 'y': 5}, 'playerB'),
-    new Unit(Elf, {'x': 1, 'y': 6}, 'playerB'),
-    new Unit(Knight, {'x': 2, 'y': 6}, 'playerB'),
-    new Unit(Dwarf, {'x': 8, 'y': 5}, 'playerB'),
-    new Unit(Dwarf, {'x': 7, 'y': 6}, 'playerB'),
-    new Unit(Elf, {'x': 3, 'y': 6}, 'playerB'),
-    new Unit(Knight, {'x': 4, 'y': 5}, 'playerB'),
-    new Unit(Dwarf, {'x': 6, 'y': 5}, 'playerB'),
-    new Unit(Elf, {'x': 5, 'y': 6}, 'playerB'),
-]
+let playerAUnits = [ ]
+
+let playerBUnits = [ ]
 
 let selectedUnit;
 let modes = {
     'select': 0,
     'move': 1,
     'attack': 2,
+    "add": 3
 }
-let mode = modes.select;
+let mode = modes.add;
 
 let onMove = 'playerA';
 
@@ -61,6 +54,54 @@ canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
             'y': Math.trunc(ev.offsetY / boxHeight)
         }
         switch (mode) {
+            case modes.add:
+                let inPlayerAField = (clickedBlock['y'] == 0) || (clickedBlock['y'] == 1);
+                let inPlayerBField = (clickedBlock['y'] == 5) || (clickedBlock['y'] == 6);
+                switch(unitToAdd) {
+                    case Knight:
+                        if ((onMove == 'playerA') && inPlayerAField && (playerAInventory['knight'] > 0)) {
+                            playerAUnits.push(new Unit(Knight, {'x': clickedBlock['x'], 'y': clickedBlock['y']}, 'playerA'));
+                            playerAInventory['knight'] -= 1;
+                            $('#knights').text = playerAInventory['knight'];
+                        } else if ((onMove == 'playerB') && inPlayerBField && (playerBInventory['knight'] > 0)) {
+                            playerBUnits.push(new Unit(Knight, {'x': clickedBlock['x'], 'y': clickedBlock['y']}, 'playerB'));
+                            playerBInventory['knight'] -= 1;
+                        }
+                        break;
+                    case Dwarf:
+                        if ((onMove == 'playerA') && inPlayerAField && (playerAInventory['dwarf'] > 0)) {
+                            playerAUnits.push(new Unit(Dwarf, {'x': clickedBlock['x'], 'y': clickedBlock['y']}, 'playerA'));
+                            playerAInventory['dwarf'] -= 1;
+                            $('#dwarves').text = playerAInventory['dwarf'];
+                        } else if ((onMove == 'playerB') && inPlayerBField && (playerBInventory['dwarf'] > 0)) {
+                            playerBUnits.push(new Unit(Dwarf, {'x': clickedBlock['x'], 'y': clickedBlock['y']}, 'playerB'));
+                            playerBInventory['dwarf'] -= 1;
+                        }
+                        break;
+                    case Elf:
+                        if ((onMove == 'playerA') && inPlayerAField && (playerAInventory['elf'] > 0)) {
+                            playerAUnits.push(new Unit(Elf, {'x': clickedBlock['x'], 'y': clickedBlock['y']}, 'playerA'));
+                            playerAInventory['elf'] -= 1;
+                            $('#elves').text = playerAInventory['elf'];
+                        } else if ((onMove == 'playerB') && inPlayerBField && (playerBInventory['elf'] > 0)) {
+                            playerBUnits.push(new Unit(Elf, {'x': clickedBlock['x'], 'y': clickedBlock['y']}, 'playerB'));
+                            playerBInventory['elf'] -= 1;
+                        }
+                        break;
+                }
+
+                playerAInventoryEmpty = (playerAInventory['knight'] == 0) && (playerAInventory['dwarf'] == 0) && (playerAInventory['elf'] == 0)
+                playerBInventoryEmpty = (playerBInventory['knight'] == 0) && (playerBInventory['dwarf'] == 0) && (playerBInventory['elf'] == 0)
+                if (playerAInventoryEmpty)
+                    onMove = 'playerB'
+                
+                if (playerBInventoryEmpty) {
+                    mode = modes.select;
+                    onMove = 'playerA';
+                }
+
+                redraw();
+                break;
             case modes.select:
                 if (onMove == 'playerA') {
                     playerAUnits.some((unit) => {
@@ -111,7 +152,8 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('attackButton')
     'padding': '5px',
     'margin': '20px'
 }).text('Attack').on('click', function(ev) {
-    mode = modes.attack;
+    if (mode != modes.add)
+        mode = modes.attack;
     redraw();
 });
 $('#buttons').add('div').add('button').attr('type', 'button').id('moveButton').css({
@@ -119,7 +161,8 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('moveButton').c
     'padding': '5px',
     'margin': '20px'
 }).text('Move').on('click', function(ev) {
-    mode = modes.move;
+    if (mode != modes.add)
+        mode = modes.move;
     redraw();
 });
 $('#buttons').add('div').add('button').attr('type', 'button').id('healButton').css({
@@ -127,8 +170,34 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('healButton').c
     'padding': '5px',
     'margin': '20px'
 }).text('Heal').on('click', function(ev) {
-    selectedUnit.heal();
+    if (mode != modes.add)
+        selectedUnit.heal();
     mode = modes.select;
+});
+$('#wrapper').add('div').id('heroes').css({
+    'display': 'inline-block',
+    'vertical-align': 'bottom',
+    'text-align': 'left',
+});
+$('#heroes').add('div').id('knights').text(playerAInventory['knight']).on('click', function(ev) {
+    unitToAdd = Knight;
+});
+$('#heroes').add('div').id('elves').text(playerAInventory['elf']).on('click', function(ev) {
+    unitToAdd = Elf;
+});
+$('#heroes').add('div').id('dwarves').text(playerAInventory['dwarf']).on('click', function(ev) {
+    unitToAdd = Dwarf
+});
+
+$('#heroes > div').each((el) => {
+    el.css({
+        'float': 'left',
+        'border': '2px solid black',
+        'padding': '5px',
+        'user-select': 'none',
+        '-webkit-user-select': 'none',
+        '-moz-user-select': 'none'
+    });
 });
 
 document.addEventListener('keydown', function(event) {
@@ -175,16 +244,15 @@ function drawBoard() {
 
 function drawUnits() {
     playerAUnits.forEach((unit) => {
-        let color;
         switch (unit.characterClass) {
             case Knight:
-                color = '#ff0000';
+                unitText = 'K';
                 break;
             case Dwarf:
-                color = '#00ff00';
+                unitText = 'D';
                 break;
             case Elf:
-                color = '#ffc0cb';
+                unitText = 'E';
                 break;
         }
 
@@ -192,23 +260,26 @@ function drawUnits() {
             'x': ((unit.position['x'] * boxWidth) + (boxWidth / 2)),
             'y': ((unit.position['y'] * boxHeight) + (boxHeight / 2))
         }
-        ctx.beginPath()
-        ctx.ellipse(centerPoint['x'], centerPoint['y'], (boxWidth / 4), (boxHeight / 4), 0, 0, Math.PI*4);
-        ctx.fillStyle = color;
-        ctx.fill();
+        let textColor = "#0000ff";
+        ctx.font = '32px "Comic Sans MS"';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.translate((unit.position['x'] * boxWidth), (unit.position['y'] * boxHeight));
+        ctx.fillStyle = textColor;
+        ctx.fillText(unitText, (boxWidth / 2), (boxHeight / 2));
+        ctx.translate(-(unit.position['x'] * boxWidth), -(unit.position['y'] * boxHeight));
     });
 
     playerBUnits.forEach((unit) => {
-        let color;
         switch (unit.characterClass) {
             case Knight:
-                color = '#ff0000';
+                unitText = 'K';
                 break;
             case Dwarf:
-                color = '#00ff00';
+                unitText = 'D';
                 break;
             case Elf:
-                color = '#ffc0cb';
+                unitText = 'E';
                 break;
         }
 
@@ -216,11 +287,16 @@ function drawUnits() {
             'x': ((unit.position['x'] * boxWidth) + (boxWidth / 2)),
             'y': ((unit.position['y'] * boxHeight) + (boxHeight / 2))
         }
-        ctx.beginPath()
-        ctx.ellipse(centerPoint['x'], centerPoint['y'], (boxWidth / 4), (boxHeight / 4), 0, 0, Math.PI*4);
-        ctx.fillStyle = color;
-        ctx.fill();
+        let textColor = "#ff0000";
+        ctx.font = '32px "Comic Sans MS"';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.translate((unit.position['x'] * boxWidth), (unit.position['y'] * boxHeight));
+        ctx.fillStyle = textColor;
+        ctx.fillText(unitText, (boxWidth / 2), (boxHeight / 2));
+        ctx.translate(-(unit.position['x'] * boxWidth), -(unit.position['y'] * boxHeight));
     });
+
 }
 
 function drawOverlay() {
@@ -269,7 +345,6 @@ function drawOverlay() {
                         let columnBetweenPlayerEnemy = (Math.min(selectedUnit.position['x'], enemy.position['x']) < x) && (x < Math.max(selectedUnit.position['x'], enemy.position['x']));
 
                         if (columnBetweenPlayerEnemy) {
-                            console.log('call');
                             ctx.fillStyle = overlayBackgroundColor;
                             ctx.fillRect((x * boxWidth), (y * boxHeight), boxWidth, boxHeight);
                         }
@@ -284,6 +359,15 @@ function redraw() {
     drawBoard();
     drawUnits();
     drawOverlay();
+    if (onMove == 'playerA') {
+        $('#knights').text(playerAInventory['knight']);
+        $('#dwarves').text(playerAInventory['dwarf']);
+        $('#elves').text(playerAInventory['elf']);
+    } else {
+        $('#knights').text(playerBInventory['knight']);
+        $('#dwarves').text(playerBInventory['dwarf']);
+        $('#elves').text(playerBInventory['elf']);
+    }
 };
 
 function getReachableMovementBoxes() {
