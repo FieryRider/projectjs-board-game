@@ -30,9 +30,9 @@ let playerBInventory = {
 
 let unitToAdd;
 
-let playerAUnits = [ ]
-
-let playerBUnits = [ ]
+let playerAUnits = []
+let playerBUnits = []
+let obsticles = []
 
 let selectedUnit;
 let modes = {
@@ -326,6 +326,14 @@ function drawUnits() {
 
 }
 
+function drawObsticles() {
+    obsticleColor = '#000000';
+    obsticles.forEach((obsticle) => {
+        ctx.fillStyle = obsticleColor;
+        ctx.fillRect((obsticle['x'] * boxWidth), (obsticle['y'] * boxHeight), boxWidth, boxHeight);
+    });
+}
+
 function drawOverlay() {
     if (!selectedUnit) return;
 
@@ -385,6 +393,7 @@ function drawOverlay() {
 function redraw() {
     drawBoard();
     drawUnits();
+    drawObsticles();
     drawOverlay();
     if (onMove == 'playerA') {
         $('#knights').text(playerAInventory['knight']);
@@ -416,6 +425,14 @@ function isStraightLineReachable(x, y, targetX, targetY) {
                 return true;
             }
         });
+        obsticles.some((obsticle) => {
+            let hasSameX = obsticle['x'] == targetX;
+            let obsticleYInPath = yPathCoords.includes(obsticle['y']);
+            if (hasSameX && obsticleYInPath) {
+                straightLineReachable = false;
+                return true;
+            }
+        });
     } else if (targetY == y) {
         straightLineReachable = true;
         minX = Math.min(targetX, x);
@@ -428,6 +445,14 @@ function isStraightLineReachable(x, y, targetX, targetY) {
             let hasSameY = unit.position['y'] == targetY;
             let unitXInPath = xPathCoords.includes(unit.position['x']);
             if (hasSameY && unitXInPath){
+                straightLineReachable = false;
+                return true;
+            }
+        });
+        obsticles.some((obsticle) => {
+            let hasSameY = obsticle['y'] == targetY;
+            let obsticleXInPath = xPathCoords.includes(obsticle['x']);
+            if (hasSameY && unitXInPath) {
                 straightLineReachable = false;
                 return true;
             }
@@ -448,45 +473,43 @@ function isLShapeReachable(x, y, targetX, targetY, movementSpeed) {
     let xOnePositionOffset = (targetX == (x - 1)) || (targetX == (x + 1));
     let yOnePositionOffset = (targetY == (y - 1)) || (targetY == (y + 1));
 
+    let pathBlocks = [];
     if (xOnePositionOffset) {
         lShapeReachable = true;
         minY = Math.min(targetY, y);
         maxY = Math.max(targetY, y);
-        let pathBlocks = [];
+
         for (let i = minY; i <= maxY; i++) {
             pathBlocks.push({
                 'x': x,
                 'y': i
             });
         }
-        pathBlocks.splice(pathBlocks.indexOf({'x': x, 'y': y}), 1);
-
-        playerAUnits.concat(playerBUnits).some((unit) => {
-            if (pathBlocks.includes(unit.position)) {
-                return false
-            }
-        });
     } else if (yOnePositionOffset) {
         lShapeReachable = true;
         minX = Math.min(targetX, x);
         maxX = Math.max(targetX, x);
 
-        let pathBlocks = [];
         for (let i = minX; i <= maxX; i++) {
             pathBlocks.push({
                 'x': i,
                 'y': y
             });
         }
-
-        pathBlocks.splice(pathBlocks.indexOf({'x': x, 'y': y}), 1);
-
-        playerAUnits.concat(playerBUnits).some((unit) => {
-            if (pathBlocks.includes(unit.position)) {
-                return false
-            }
-        });
     }
+
+    pathBlocks.splice(pathBlocks.indexOf({'x': x, 'y': y}), 1);
+
+    playerAUnits.concat(playerBUnits).some((unit) => {
+        if (pathBlocks.includes(unit.position)) {
+            return false
+        }
+    });
+    obsticles.some((obsticle) => {
+        if (pathBlocks.includes(obsticle)) {
+            return false
+        }
+    });
 
     return lShapeReachable;
 }
@@ -499,24 +522,26 @@ function getReachableMovementBoxes() {
             let distanceReachable = (distance <= selectedUnit.characterClass.movementSpeed) && (distance != 0);
 
             let noUnits = true;
-            playerAUnits.some((unit) => {
+            playerAUnits.concat(playerBUnits).some((unit) => {
                 if ((unit.position['x'] == x) && (unit.position['y'] == y)) {
                     noUnits = false;
                     return true;
                 }
             });
-            playerBUnits.some((unit) => {
-                if ((unit.position['x'] == x) && (unit.position['y'] == y)) {
-                    noUnits = false;
+
+            let noObsticles = true;
+            obsticles.some((obsticle) => {
+                if ((obsticle['x'] == x) && (obsticle['y'] == y)) {
+                    noObsticles = false
                     return true;
                 }
-            })
+            });
 
             let straightLineReachable = isStraightLineReachable(selectedUnit.position['x'], selectedUnit.position['y'], x, y);
 
             let lShapeReachable = isLShapeReachable(selectedUnit.position['x'], selectedUnit.position['y'], x, y, selectedUnit.characterClass.movementSpeed);
 
-            if (distanceReachable && (straightLineReachable || lShapeReachable) && noUnits) {
+            if (distanceReachable && (straightLineReachable || lShapeReachable) && noUnits && noObsticles) {
                 reachableBoxes.push({
                     'x': x,
                     'y': y,
@@ -573,4 +598,23 @@ function getReachableEnemies() {
     return reachableEnemies;
 }
 
+function generateObsticles() {
+    let numberOfObsticles = randomBetween(1, 5);
+    let obsticles = new Set();
+
+    let idx = 0;
+    while (obsticles.size < numberOfObsticles) {
+        let x = randomBetween(0, 8);
+        let y = randomBetween(2, 4);
+        obsticles.add({'x': x, 'y': y});
+    }
+    
+    return obsticles;
+}
+
+function randomBetween(min, max) {
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
+
+obsticles = Array.from(generateObsticles());
 redraw();
