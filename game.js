@@ -543,14 +543,14 @@ function getReachableEnemies() {
             } else if (y == selectedUnit.position['y']) {
                 distance = Math.abs(selectedUnit.position['x'] - x);
             }
-            let reachable = (distance <= selectedUnit.characterClass.reach) && (distance != 0);
 
-            if (reachable) {
-                reachableAttackBoxes.push({
-                    'x': x,
-                    'y': y
-                })
-            }
+            if (distance != selectedUnit.characterClass.reach)
+                continue;
+
+            reachableAttackBoxes.push({
+                'x': x,
+                'y': y
+            });
         }
     }
 
