@@ -92,12 +92,14 @@ canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
 
                 playerAInventoryEmpty = (playerAInventory['knight'] == 0) && (playerAInventory['dwarf'] == 0) && (playerAInventory['elf'] == 0)
                 playerBInventoryEmpty = (playerBInventory['knight'] == 0) && (playerBInventory['dwarf'] == 0) && (playerBInventory['elf'] == 0)
-                if (playerAInventoryEmpty)
+
+                if (onMove == 'playerA')
                     onMove = 'playerB'
-                
-                if (playerBInventoryEmpty) {
+                else
+                    onMove = 'playerA'
+
+                if (playerBInventoryEmpty && playerBInventoryEmpty) {
                     mode = modes.select;
-                    onMove = 'playerA';
                 }
 
                 redraw();
