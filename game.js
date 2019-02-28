@@ -397,12 +397,106 @@ function redraw() {
     }
 };
 
+// Is target reacheble from x,y
+function isStraightLineReachable(x, y, targetX, targetY) {
+    let straightLineReachable = false;
+    if (targetX == x) {
+        straightLineReachable = true;
+        minY = Math.min(targetY, y);
+        maxY = Math.max(targetY, y);
+        yPathCoords = [];
+        for (let i = (minY + 1); i < maxY; i++)
+            yPathCoords.push(i);
+
+        playerAUnits.concat(playerBUnits).some((unit) => {
+            let hasSameX = unit.position['x'] == targetX;
+            let unitYInPath = yPathCoords.includes(unit.position['y']);
+            if (hasSameX && unitYInPath){
+                straightLineReachable = false;
+                return true;
+            }
+        });
+    } else if (targetY == y) {
+        straightLineReachable = true;
+        minX = Math.min(targetX, x);
+        maxX = Math.max(targetX, x);
+        xPathCoords=[];
+        for (let i = (minX + 1); i < maxX; i++)
+            xPathCoords.push(i)
+
+        playerAUnits.concat(playerBUnits).some((unit) => {
+            let hasSameY = unit.position['y'] == targetY;
+            let unitXInPath = xPathCoords.includes(unit.position['x']);
+            if (hasSameY && unitXInPath){
+                straightLineReachable = false;
+                return true;
+            }
+        });
+    }
+
+    return straightLineReachable;
+}
+
+function isLShapeReachable(x, y, targetX, targetY, movementSpeed) {
+    let lShapeReachable = false;
+
+    let distance = Math.abs(x - targetX) + Math.abs(y - targetY);
+
+    if ((distance != 3) || (movementSpeed < 3))
+        return false;
+
+    let xOnePositionOffset = (targetX == (x - 1)) || (targetX == (x + 1));
+    let yOnePositionOffset = (targetY == (y - 1)) || (targetY == (y + 1));
+
+    if (xOnePositionOffset) {
+        lShapeReachable = true;
+        minY = Math.min(targetY, y);
+        maxY = Math.max(targetY, y);
+        let pathBlocks = [];
+        for (let i = minY; i <= maxY; i++) {
+            pathBlocks.push({
+                'x': x,
+                'y': i
+            });
+        }
+        pathBlocks.splice(pathBlocks.indexOf({'x': x, 'y': y}), 1);
+
+        playerAUnits.concat(playerBUnits).some((unit) => {
+            if (pathBlocks.includes(unit.position)) {
+                return false
+            }
+        });
+    } else if (yOnePositionOffset) {
+        lShapeReachable = true;
+        minX = Math.min(targetX, x);
+        maxX = Math.max(targetX, x);
+
+        let pathBlocks = [];
+        for (let i = minX; i <= maxX; i++) {
+            pathBlocks.push({
+                'x': i,
+                'y': y
+            });
+        }
+
+        pathBlocks.splice(pathBlocks.indexOf({'x': x, 'y': y}), 1);
+
+        playerAUnits.concat(playerBUnits).some((unit) => {
+            if (pathBlocks.includes(unit.position)) {
+                return false
+            }
+        });
+    }
+
+    return lShapeReachable;
+}
+
 function getReachableMovementBoxes() {
     let reachableBoxes = [];
     for (let y = 0; y < gameBoard.length; y++) {
         for (let x = 0; x < gameBoard[y].length; x++) {
             let distance = Math.abs(selectedUnit.position['x'] - x) + Math.abs(selectedUnit.position['y'] - y);
-            let reachable = (distance <= selectedUnit.characterClass.movementSpeed) && (distance != 0);
+            let distanceReachable = (distance <= selectedUnit.characterClass.movementSpeed) && (distance != 0);
 
             let noUnits = true;
             playerAUnits.some((unit) => {
@@ -418,7 +512,11 @@ function getReachableMovementBoxes() {
                 }
             })
 
-            if (reachable && noUnits) {
+            let straightLineReachable = isStraightLineReachable(selectedUnit.position['x'], selectedUnit.position['y'], x, y);
+
+            let lShapeReachable = isLShapeReachable(selectedUnit.position['x'], selectedUnit.position['y'], x, y, selectedUnit.characterClass.movementSpeed);
+
+            if (distanceReachable && (straightLineReachable || lShapeReachable) && noUnits) {
                 reachableBoxes.push({
                     'x': x,
                     'y': y,
