@@ -1,4 +1,4 @@
-var canvas = $('#canvas')
+var canvas;
 var canvasWidth = 800;
 var canvasHeight = 600;
 var boxWidth = canvasWidth / 9;
@@ -45,10 +45,18 @@ let mode = modes.add;
 
 let onMove = 'playerA';
 
-$('#wrapper').css('text-align', 'center');
-canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
+$('body').add('section').id('wrapper').css({
+    'margin': 'auto',
+    'width': '60%',
+});
+$('#wrapper').add('div').id('canvas-wrapper').css('float', 'left');
+$('#canvas-wrapper').add('canvas').id('canvas').attr({'width': canvasWidth, 'height': canvasHeight}).css({
     'border': '1px solid black',
-    'display': 'inline-block'}).on('click', function(ev) {
+    'display': 'inline-block'});
+
+canvas = $('#canvas');
+
+$('#canvas').on('click', function(ev) {
         let clickedBlock = {
             'x': Math.trunc(ev.offsetX / boxWidth),
             'y': Math.trunc(ev.offsetY / boxHeight)
@@ -172,12 +180,8 @@ canvas.attr({'width': canvasWidth, 'height': canvasHeight}).css({
         }
     });
 
-$('#wrapper').add('div').id('buttons').css({
-    'display': 'inline-block',
-    'vertical-align': 'top',
-});
+$('#wrapper').add('div').id('buttons');
 $('#buttons').add('div').add('button').attr('type', 'button').id('attackButton').css({
-    'display': 'inline-block',
     'padding': '5px',
     'margin': '20px'
 }).text('Attack').on('click', function(ev) {
@@ -186,7 +190,6 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('attackButton')
     redraw();
 });
 $('#buttons').add('div').add('button').attr('type', 'button').id('moveButton').css({
-    'display': 'inline-block',
     'padding': '5px',
     'margin': '20px'
 }).text('Move').on('click', function(ev) {
@@ -195,7 +198,6 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('moveButton').c
     redraw();
 });
 $('#buttons').add('div').add('button').attr('type', 'button').id('healButton').css({
-    'display': 'inline-block',
     'padding': '5px',
     'margin': '20px'
 }).text('Heal').on('click', function(ev) {
@@ -203,19 +205,23 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('healButton').c
         selectedUnit.heal();
     mode = modes.select;
 });
-$('#wrapper').add('div').id('heroes').css({
-    'display': 'inline-block',
-    'vertical-align': 'bottom',
-    'text-align': 'left',
+$('#wrapper').add('div').id('info').text('Selected Unit:').css({
+    'height': '200px',
+    'border': '1px solid black',
+    'margin-left': canvasWidth + 5 + 'px'
 });
-$('#heroes').add('div').id('knights').text(playerAInventory['knight']).on('click', function(ev) {
+$('#wrapper').add('div').id('heroes').css({
+    'margin-top': '120px',
+    'margin-left': canvasWidth + 20 + 'px'
+});
+$('#heroes').add('div').id('knights').css('margin', '2px').text(playerAInventory['knight']).on('click', function(ev) {
     unitToAdd = Knight;
 });
-$('#heroes').add('div').id('elves').text(playerAInventory['elf']).on('click', function(ev) {
+$('#heroes').add('div').id('elves').css('margin', '2px').text(playerAInventory['elf']).on('click', function(ev) {
     unitToAdd = Elf;
 });
-$('#heroes').add('div').id('dwarves').text(playerAInventory['dwarf']).on('click', function(ev) {
-    unitToAdd = Dwarf
+$('#heroes').add('div').id('dwarves').css('margin', '2px').text(playerAInventory['dwarf']).on('click', function(ev) {
+    unitToAdd = Dwarf;
 });
 
 $('#heroes > div').each((el) => {
@@ -398,13 +404,13 @@ function redraw() {
     drawObsticles();
     drawOverlay();
     if (onMove == 'playerA') {
-        $('#knights').text(playerAInventory['knight']);
-        $('#dwarves').text(playerAInventory['dwarf']);
-        $('#elves').text(playerAInventory['elf']);
+        $('#knights').text(`K<sub>${playerAInventory['knight']}</sub>`);
+        $('#dwarves').text(`D<sub>${playerAInventory['dwarf']}</sub>`);
+        $('#elves').text(`E<sub>${playerAInventory['elf']}</sub>`);
     } else {
-        $('#knights').text(playerBInventory['knight']);
-        $('#dwarves').text(playerBInventory['dwarf']);
-        $('#elves').text(playerBInventory['elf']);
+        $('#knights').text(`K<sub>${playerBInventory['knight']}</sub>`);
+        $('#dwarves').text(`D<sub>${playerBInventory['dwarf']}</sub>`);
+        $('#elves').text(`E<sub>${playerBInventory['elf']}</sub>`);
     }
 };
 
