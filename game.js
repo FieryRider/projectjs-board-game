@@ -201,8 +201,10 @@ $('#buttons').add('div').add('button').attr('type', 'button').id('healButton').c
     'padding': '5px',
     'margin': '20px'
 }).text('Heal').on('click', function(ev) {
-    if ((mode != modes.add) && selectedUnit)
+    if ((mode != modes.add) && selectedUnit) {
         selectedUnit.heal();
+        redraw();
+    }
     mode = modes.select;
 });
 $('#wrapper').add('div').id('info').text('Selected Unit:').css({
@@ -403,6 +405,13 @@ function redraw() {
     drawUnits();
     drawObsticles();
     drawOverlay();
+
+    if (selectedUnit) {
+        $('#info').text(`Selected unit:<br>Strength: ${selectedUnit.characterClass['strength']}<br>
+            Armor: ${selectedUnit.characterClass['armor']}<br>
+            Health: ${selectedUnit.health}<br>
+            Potions: ${selectedUnit.potions}`);
+    }
     if (onMove == 'playerA') {
         $('#knights').text(`K<sub>${playerAInventory['knight']}</sub>`);
         $('#dwarves').text(`D<sub>${playerAInventory['dwarf']}</sub>`);
